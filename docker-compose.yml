@@ -1,0 +1,36 @@
+version: '2.2'
+
+networks:
+  es:
+
+services:
+  es01:
+    container_name: $MACHINE_NAME
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.4
+    restart: unless-stopped
+    ports:
+      - 9200:9200
+    networks:
+      - es
+    environment:
+      - node.name=$MACHINE_NAME
+      - cluster.name=$CLUSTER_NAME
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=$ES_PASSWORD
+    healthcheck:
+      test: curl -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 1g
+    cap_add:
+      - IPC_LOCK
